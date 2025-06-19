@@ -17,9 +17,10 @@ class BrokerView(BaseHandler):
         if app.transport == 'amqp' and app.options.broker_api:
             http_api = app.options.broker_api
 
+        print("broker view http_api: ", http_api)
         try:
             # Inform about RabbitMQ connection initiation with a 3-second timeout
-            print("Establishing connection to RabbitMQ broker (timeout 3 seconds)...")
+            print("broker view: Establishing connection to RabbitMQ broker (timeout 3 seconds)...")
             broker = Broker(app.capp.connection(connect_timeout=3.0).as_uri(include_password=True),
                             http_api=http_api, broker_options=self.capp.conf.broker_transport_options,
                             broker_use_ssl=self.capp.conf.broker_use_ssl)

@@ -397,7 +397,8 @@ Return length of all active queues
             http_api = app.options.broker_api
 
         # Inform about RabbitMQ connection initiation with a 3-second timeout
-        print("Establishing connection to RabbitMQ broker (timeout 3 seconds)...")
+        print("tasks view: Establishing connection to RabbitMQ broker (timeout 3 seconds)...")
+        print("tasks view http_api: ", http_api)
         broker = Broker(app.capp.connection(connect_timeout=3.0).as_uri(include_password=True),
                         http_api=http_api, broker_options=self.capp.conf.broker_transport_options,
                         broker_use_ssl=self.capp.conf.broker_use_ssl)

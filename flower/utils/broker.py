@@ -24,6 +24,8 @@ class BrokerBase:
         self.port = purl.port
         self.vhost = purl.path[1:]
 
+        print(f"BrokerBase: broker_url: {purl.hostname}")
+
         username = purl.username
         password = purl.password
 
@@ -63,7 +65,8 @@ class RabbitMQ(BrokerBase):
 
         http_client = httpclient.AsyncHTTPClient()
         try:
-            print(f"Connecting to RabbitMQ management API at {url} with timeout 3 seconds...")
+            # Print only the last 20 characters of the broker API URL for brevity
+            print(f"Connecting to RabbitMQ management API ...{url[-20:]} (timeout 3 seconds)")
             response = await http_client.fetch(
                 url, auth_username=username, auth_password=password,
                 connect_timeout=3.0, request_timeout=3.0,

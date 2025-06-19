@@ -169,27 +169,33 @@ class Events(threading.Thread):
             self.save_state()
 
     def run(self):
-        try_interval = 1
+        try_interval = 10
         while True:
             try:
                 try_interval *= 2
 
                 # Print message before establishing RabbitMQ connection for event capture
-                print("Establishing connection to RabbitMQ broker for event capture (timeout 3 seconds)...")
+                print("events: Establishing connection to RabbitMQ broker for event capture (timeout 3 seconds)...")
                 with self.capp.connection(connect_timeout=3.0) as conn:
+                    print("events: Connection established to RabbitMQ broker for event capture")
                     recv = EventReceiver(conn,
                                          handlers={"*": self.on_event},
                                          app=self.capp)
+                    print("events: EventReceiver created")
                     try_interval = 1
+                    print("events: Capturing events...")
                     logger.debug("Capturing events...")
-                    recv.capture(limit=None, timeout=None, wakeup=True)
+                    recv.capture(limit=None, timeout=35, wakeup=True)
+                    print("events: Events captured or timed out")
             except (KeyboardInterrupt, SystemExit):
                 try:
                     import _thread as thread
                 except ImportError:
                     import thread
+                print("events: KeyboardInterrupt or SystemExit detected")
                 thread.interrupt_main()
             except Exception as e:
+                print(f"events: Exception occurred: {e}")
                 logger.error("Failed to capture events: '%s', "
                              "trying again in %s seconds.",
                              e, try_interval)

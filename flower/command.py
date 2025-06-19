@@ -44,6 +44,8 @@ def flower(ctx, tornado_argv):
     extract_settings()
     setup_logging()
 
+    print("flower command: options.broker_api: ", options.broker_api)
+
     app = ctx.obj.app
     flower_app = Flower(capp=app, options=options, **settings)
 
@@ -159,6 +161,7 @@ def is_flower_envvar(name):
 
 
 def print_banner(app, ssl):
+    print("print_banner: options.broker_api: ", options.broker_api)
     if not options.unix_socket:
         if options.url_prefix:
             prefix_str = f'/{options.url_prefix}/'
@@ -174,7 +177,7 @@ def print_banner(app, ssl):
         logger.info("Visit me via unix socket file: %s", options.unix_socket)
 
     # Print visibility message when retrieving broker URI and ensure 3-second timeout
-    print("Retrieving RabbitMQ broker URI with timeout 3 seconds...")
+    print("print banner:Retrieving RabbitMQ broker URI with timeout 3 seconds...")
     logger.info('Broker: %s', app.connection(connect_timeout=3.0).as_uri())
 
     logger.info(
