@@ -174,7 +174,9 @@ class Events(threading.Thread):
             try:
                 try_interval *= 2
 
-                with self.capp.connection() as conn:
+                # Print message before establishing RabbitMQ connection for event capture
+                print("Establishing connection to RabbitMQ broker for event capture (timeout 3 seconds)...")
+                with self.capp.connection(connect_timeout=3.0) as conn:
                     recv = EventReceiver(conn,
                                          handlers={"*": self.on_event},
                                          app=self.capp)

@@ -173,7 +173,10 @@ def print_banner(app, ssl):
     else:
         logger.info("Visit me via unix socket file: %s", options.unix_socket)
 
-    logger.info('Broker: %s', app.connection().as_uri())
+    # Print visibility message when retrieving broker URI and ensure 3-second timeout
+    print("Retrieving RabbitMQ broker URI with timeout 3 seconds...")
+    logger.info('Broker: %s', app.connection(connect_timeout=3.0).as_uri())
+
     logger.info(
         'Registered tasks: \n%s',
         pformat(sorted(app.tasks.keys()))

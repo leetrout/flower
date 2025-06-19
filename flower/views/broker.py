@@ -18,7 +18,9 @@ class BrokerView(BaseHandler):
             http_api = app.options.broker_api
 
         try:
-            broker = Broker(app.capp.connection(connect_timeout=1.0).as_uri(include_password=True),
+            # Inform about RabbitMQ connection initiation with a 3-second timeout
+            print("Establishing connection to RabbitMQ broker (timeout 3 seconds)...")
+            broker = Broker(app.capp.connection(connect_timeout=3.0).as_uri(include_password=True),
                             http_api=http_api, broker_options=self.capp.conf.broker_transport_options,
                             broker_use_ssl=self.capp.conf.broker_use_ssl)
         except NotImplementedError as exc:
@@ -31,5 +33,5 @@ class BrokerView(BaseHandler):
             logger.error("Unable to get queues: '%s'", e)
 
         self.render("broker.html",
-                    broker_url=app.capp.connection().as_uri(),
+                    broker_url=app.capp.connection(connect_timeout=3.0).as_uri(),
                     queues=queues)

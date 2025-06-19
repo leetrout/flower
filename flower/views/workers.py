@@ -69,9 +69,11 @@ class WorkersView(BaseHandler):
         if json:
             self.write(dict(data=list(workers.values())))
         else:
+            # Inform about broker URI retrieval with 3-second timeout (ensures connection attempts respect timeout)
+            print("Retrieving RabbitMQ broker URI with timeout 3 seconds...")
             self.render("workers.html",
                         workers=workers,
-                        broker=self.application.capp.connection().as_uri(),
+                        broker=self.application.capp.connection(connect_timeout=3.0).as_uri(),
                         autorefresh=1 if self.application.options.auto_refresh else 0)
 
     @classmethod

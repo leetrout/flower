@@ -63,9 +63,10 @@ class RabbitMQ(BrokerBase):
 
         http_client = httpclient.AsyncHTTPClient()
         try:
+            print(f"Connecting to RabbitMQ management API at {url} with timeout 3 seconds...")
             response = await http_client.fetch(
                 url, auth_username=username, auth_password=password,
-                connect_timeout=1.0, request_timeout=2.0,
+                connect_timeout=3.0, request_timeout=3.0,
                 validate_cert=False)
         except (socket.error, httpclient.HTTPError) as e:
             logger.error("RabbitMQ management API call failed: %s", e)
