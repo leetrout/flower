@@ -96,6 +96,14 @@ class Flower(tornado.web.Application):
         except Exception as exc:  # pylint: disable=broad-except
             logger.debug("Failed to gather IOLoop stats: %s", exc)
 
+        # Schedule next run 5 seconds later to keep monitoring alive even if
+        # PeriodicCallback failed for some reason.
+        try:
+            self.io_loop.call_later(5.0, self._log_ioloop)
+        except RuntimeError:
+            # io_loop may be closing; ignore
+            pass
+
     def start(self):
         self.events.start()
 
