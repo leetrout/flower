@@ -67,6 +67,12 @@ class Flower(tornado.web.Application):
             max_tasks_in_memory=self.options.max_tasks)
         self.started = False
 
+        # Log a stack trace anytime the event loop is blocked for > 500 ms.
+        try:
+            self.io_loop.set_blocking_log_threshold(0.5)
+        except AttributeError:
+            pass
+
     def _log_ioloop(self):
         """Periodic callback that logs basic statistics about the Tornado IOLoop
         and ThreadPoolExecutor queue. This can be very helpful when debugging
