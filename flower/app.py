@@ -104,6 +104,7 @@ class Flower(tornado.web.Application):
                 ssl_options=self.ssl_options,
                 xheaders=self.options.xheaders,
             )
+            logger.info("Flower listening on %s:%s", self.options.address or '0.0.0.0', self.options.port)
         else:
             from tornado.netutil import bind_unix_socket
 
