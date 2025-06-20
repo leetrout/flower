@@ -4,6 +4,7 @@ import traceback
 import copy
 import logging
 import hmac
+import time
 
 from base64 import b64decode
 
@@ -134,3 +135,26 @@ class BaseHandler(tornado.web.RequestHandler):
             queues = set([self.capp.conf.task_default_queue]) |\
                 {q.name for q in self.capp.conf.task_queues or [] if q.name}
         return sorted(queues)
+
+    # ---------------------------------------------------------------------
+    # Request-level observability helpers
+    # ---------------------------------------------------------------------
+    def prepare(self):  # pylint: disable=arguments-differ
+        """Record the time right before the request is handled so we can log
+        the latency in *on_finish*. This is lightweight and gives us immediate
+        feedback if the UI is hanging for particular endpoints.
+        """
+        self._request_start_time = time.time()  # noqa: WPS437  (attribute needed for finish)
+
+    def on_finish(self):  # pylint: disable=arguments-differ
+        """Log basic request statistics once the handler is done."""
+        duration_ms = (
+            (time.time() - getattr(self, "_request_start_time", time.time())) * 1000.0
+        )
+        logger.info(
+            "[HTTP] %s %s -> %s %.2fms",
+            self.request.method,
+            self.request.uri,
+            self.get_status(),
+            duration_ms,
+        )

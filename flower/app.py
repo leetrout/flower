@@ -1,5 +1,6 @@
 import sys
 import logging
+import time
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -9,6 +10,7 @@ import tornado.web
 from tornado import ioloop
 from tornado.httpserver import HTTPServer
 from tornado.web import url
+from tornado.ioloop import PeriodicCallback
 
 from .urls import handlers as default_handlers
 from .events import Events
@@ -65,18 +67,54 @@ class Flower(tornado.web.Application):
             max_tasks_in_memory=self.options.max_tasks)
         self.started = False
 
+    def _log_ioloop(self):
+        """Periodic callback that logs basic statistics about the Tornado IOLoop
+        and ThreadPoolExecutor queue. This can be very helpful when debugging
+        situations where the UI appears to hang because it provides visibility
+        into how busy the loop is and how many blocking operations are queued
+        in the executor.
+        """
+        try:
+            pending_callbacks = len(getattr(self.io_loop, "_callbacks", []))
+            timeouts = len(getattr(self.io_loop, "_timeouts", []))
+
+            # The work queue lives on the executor; accessing a protected member
+            # here is acceptable because it is purely for debugging/observability
+            # purposes.
+            executor_backlog = getattr(self.executor, "_work_queue", None)
+            if executor_backlog is not None:
+                executor_size = executor_backlog.qsize()
+            else:
+                executor_size = "N/A"
+
+            logger.info(
+                "[IOLoop] pending_callbacks=%s timeouts=%s executor_queue=%s",
+                pending_callbacks, timeouts, executor_size,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.debug("Failed to gather IOLoop stats: %s", exc)
+
     def start(self):
         self.events.start()
 
         if not self.options.unix_socket:
-            self.listen(self.options.port, address=self.options.address,
-                        ssl_options=self.ssl_options,
-                        xheaders=self.options.xheaders)
+            self.listen(
+                self.options.port,
+                address=self.options.address,
+                ssl_options=self.ssl_options,
+                xheaders=self.options.xheaders,
+            )
         else:
             from tornado.netutil import bind_unix_socket
+
             server = HTTPServer(self)
             socket = bind_unix_socket(self.options.unix_socket, mode=0o777)
             server.add_socket(socket)
+
+        # Start periodic observability callback when debug mode is enabled so
+        # that we do not flood the logs in production deployments.
+        if self.options.debug:
+            PeriodicCallback(self._log_ioloop, 5000).start()
 
         self.started = True
         self.update_workers()
@@ -91,9 +129,30 @@ class Flower(tornado.web.Application):
             self.io_loop.stop()
             self.started = False
 
-    @property
     def transport(self):
-        return getattr(self.capp.connection().transport, 'driver_type', None)
+        """Return broker transport driver type without blocking the IOLoop.
+
+        Instead of creating a new network connection (which may hang if the
+        broker is unreachable) we parse the broker URL from the Celery config.
+        If that fails we fall back to establishing a connection with a short
+        timeout so that the operation is bounded.
+        """
+        broker_url = getattr(self.capp.conf, "broker_url", "")
+        if "://" in broker_url:
+            return broker_url.split("://", 1)[0]
+
+        # Fallback – attempt to open a quick connection but *never* block for
+        # too long. A 3-second timeout keeps the UI responsive even when the
+        # broker is down.
+        try:
+            return getattr(
+                self.capp.connection(connect_timeout=3.0).transport,
+                "driver_type",
+                None,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Unable to determine broker transport: %s", exc)
+            return None
 
     @property
     def workers(self):
