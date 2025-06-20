@@ -125,6 +125,14 @@ class Flower(tornado.web.Application):
         self.started = True
         self.update_workers()
 
+        # Schedule a very early callback (1 s) to confirm the IOLoop actually
+        # runs. If we never see this line printed, the loop is blocked before
+        # processing even the first timeout.
+        self.io_loop.call_later(
+            1.0,
+            lambda: print("[FLOWER] IOLoop first tick executed – event loop is alive"),
+        )
+
         print("[FLOWER] Calling io_loop.start() – server should now accept and process connections")
         self.io_loop.start()
 
