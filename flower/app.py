@@ -107,6 +107,20 @@ class Flower(tornado.web.Application):
     def start(self):
         self.events.start()
 
+        # Patch Tornado HTTPServer to log when a TCP stream is accepted. This
+        # will confirm whether connections are handed to Tornado at all.
+        from tornado.httpserver import HTTPServer as _OrigHTTPServer
+
+        if not hasattr(_OrigHTTPServer, "_flower_debug_patched"):
+            orig_handle_stream = _OrigHTTPServer.handle_stream
+
+            def _debug_handle_stream(self, stream, address, *args, **kwargs):  # type: ignore
+                print(f"[FLOWER] HTTPServer accepted connection from {address}")
+                return orig_handle_stream(self, stream, address, *args, **kwargs)
+
+            _OrigHTTPServer.handle_stream = _debug_handle_stream  # type: ignore
+            _OrigHTTPServer._flower_debug_patched = True  # type: ignore
+
         if not self.options.unix_socket:
             self.listen(
                 self.options.port,
