@@ -91,6 +91,8 @@ class Flower(tornado.web.Application):
                 "[IOLoop] pending_callbacks=%s timeouts=%s executor_queue=%s",
                 pending_callbacks, timeouts, executor_size,
             )
+            print(
+                f"[FLOWER] IOLoop stats pending_callbacks={pending_callbacks} timeouts={timeouts} executor_queue={executor_size}")
         except Exception as exc:  # pylint: disable=broad-except
             logger.debug("Failed to gather IOLoop stats: %s", exc)
 
