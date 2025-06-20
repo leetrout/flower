@@ -122,6 +122,8 @@ class Flower(tornado.web.Application):
 
         self.started = True
         self.update_workers()
+
+        print("[FLOWER] Calling io_loop.start() – server should now accept and process connections")
         self.io_loop.start()
 
     def stop(self):
