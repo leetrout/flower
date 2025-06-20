@@ -111,10 +111,9 @@ class Flower(tornado.web.Application):
             socket = bind_unix_socket(self.options.unix_socket, mode=0o777)
             server.add_socket(socket)
 
-        # Start periodic observability callback when debug mode is enabled so
-        # that we do not flood the logs in production deployments.
-        if self.options.debug:
-            PeriodicCallback(self._log_ioloop, 5000).start()
+        # Always start periodic observability callback. If you want to suppress
+        # the output in production you can raise the logging level instead.
+        PeriodicCallback(self._log_ioloop, 5000).start()
 
         self.started = True
         self.update_workers()
