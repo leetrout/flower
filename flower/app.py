@@ -164,7 +164,6 @@ class Flower(tornado.web.Application):
         )
 
         print("[FLOWER] Calling io_loop.start() – server should now accept and process connections")
-        breakpoint()
         self.io_loop.start()
 
     def stop(self):
