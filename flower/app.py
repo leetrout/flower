@@ -42,7 +42,7 @@ class Flower(tornado.web.Application):
         handlers = default_handlers
         if options is not None and options.url_prefix:
             handlers = [rewrite_handler(h, options.url_prefix) for h in handlers]
-        kwargs.update(handlers=handlers)
+        # kwargs.update(handlers=handlers)
         super().__init__(**kwargs)
         self.options = options or default_options
         self.io_loop = io_loop or ioloop.IOLoop.instance()
