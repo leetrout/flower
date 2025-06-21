@@ -93,7 +93,7 @@ class Flower(tornado.web.Application):
             else:
                 executor_size = "N/A"
 
-            logger.info(
+            print(
                 "[IOLoop] pending_callbacks=%s timeouts=%s executor_queue=%s",
                 pending_callbacks, timeouts, executor_size,
             )
@@ -108,6 +108,7 @@ class Flower(tornado.web.Application):
             self.io_loop.call_later(5.0, self._log_ioloop)
         except RuntimeError:
             # io_loop may be closing; ignore
+            print("RuntimeError: io_loop may be closing; ignore")
             pass
 
     def start(self):
@@ -138,7 +139,7 @@ class Flower(tornado.web.Application):
             # filtered out by the environment.
             print(
                 f"[FLOWER] Bound HTTP server on {(self.options.address or '0.0.0.0')}:{self.options.port}")
-            logger.info("Flower listening on %s:%s", self.options.address or '0.0.0.0', self.options.port)
+            print("Flower listening on %s:%s", self.options.address or '0.0.0.0', self.options.port)
         else:
             from tornado.netutil import bind_unix_socket
 
@@ -148,7 +149,8 @@ class Flower(tornado.web.Application):
 
         # Always start periodic observability callback. If you want to suppress
         # the output in production you can raise the logging level instead.
-        PeriodicCallback(self._log_ioloop, 5000).start()
+        # PeriodicCallback(self._log_ioloop, 5000).start()
+        self.io_loop.call_later(5.0, self._log_ioloop)
 
         self.started = True
         self.update_workers()
