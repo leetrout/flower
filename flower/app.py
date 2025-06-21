@@ -17,6 +17,15 @@ from .events import Events
 from .inspector import Inspector
 from .options import default_options
 
+import asyncio
+asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+
+logger = logging.getLogger("tornado.application")
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(levelname)s:%(name)s:%(message)s'))
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 logger = logging.getLogger(__name__)
 
